@@ -2,7 +2,7 @@ node ('swarm-deploy') {
   
   artifactoryInput = "${env.APPS_COMPOSE}" /* Artifactory URL is input thru App Compose input */ 
   artifactoryList = artifactoryInput.tokenize(';')
-  if { artifactoryList.size() != 1 } { 
+  if ( artifactoryList.size() != 1 ) { 
     sh "echo Warning: This pipeline supports only one artifactory URL"
   }
   
