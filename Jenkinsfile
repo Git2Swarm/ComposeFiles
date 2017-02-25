@@ -1,8 +1,9 @@
 node ('swarm-deploy') {
   
-  stage ('Initialize Deployment') {
-    checkout scm
-  }
+  artifactoryInput = "${env.APPS_COMPOSE}" /* Artifactory URL is input thru App Compose input */ 
+  artifactoryList = artifactoryInput.tokenize(';')
+  len = artifactoryList.length()
+  sh "echo ${len}"
   
   def ArtifactoryUrl = "${env.APPS_COMPOSE}"
   stage ('Download Stack Compose') {
