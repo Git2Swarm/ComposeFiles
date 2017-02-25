@@ -2,10 +2,13 @@ node ('swarm-deploy') {
   
   artifactoryInput = "${env.APPS_COMPOSE}" /* Artifactory URL is input thru App Compose input */ 
   artifactoryList = artifactoryInput.tokenize(';')
-  len = artifactoryList.size()
-  sh "echo ${len}"
+  if { artifactoryList.size() != 1 } { 
+    sh "echo Warning: This pipeline supports only one artifactory URL"
+  }
   
-  def ArtifactoryUrl = "${env.APPS_COMPOSE}"
+  def ArtifactoryUrl = artifactoryList[0]
+  sh "echo ${ArtifactoryUrl}"
+  
   stage ('Download Stack Compose') {
     sh "curl -k -u ${env.ARTIFACTORY_USER}:${env.ARTIFACTORY_PASSWORD}  ${ArtifactoryUrl} -o ${env.JOB_NAME}.yml"
   }
