@@ -1,5 +1,9 @@
 node ('swarm-deploy') {
   
+  stage ('Initialize Deployment') {
+    checkout scm
+  }
+  
   def ArtifactoryUrl = "${env.APPS_COMPOSE}"
   stage ('Download Stack Compose') {
     sh "curl -k -u ${env.ARTIFACTORY_USER}:${env.ARTIFACTORY_PASSWORD}  ${ArtifactoryUrl} -o ${env.JOB_NAME}.yml"
