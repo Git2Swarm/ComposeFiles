@@ -2,7 +2,7 @@ node ('swarm-deploy') {
   
   artifactoryInput = "${env.APPS_COMPOSE}" /* Artifactory URL is input thru App Compose input */ 
   artifactoryList = artifactoryInput.tokenize(';')
-  len = artifactoryList.length()
+  len = artifactoryList.size()
   sh "echo ${len}"
   
   def ArtifactoryUrl = "${env.APPS_COMPOSE}"
