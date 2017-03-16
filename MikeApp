@@ -1,0 +1,109 @@
+version: '3'
+
+services:
+  apigateway:
+    build: apigateway
+    environment:
+    - RAILSAPP_URL=http://railsapp:3000
+    - FLASKAPP_URL=http://flaskapp:5000
+    - PYTHONAPP_URL=http://pythonapp:5000
+    image: ${DOCKER_HUB_USER}/apigateway
+    ports:
+    - 8383:5000
+  db:
+    deploy:
+      placement:
+        constraints:
+        - node.role == manager
+    image: postgres:9.4
+    networks:
+    - backend
+    volumes:
+    - db-data:/var/lib/postgresql/data
+  flaskapp:
+    build: flaskapp
+    image: ${DOCKER_HUB_USER}/flaskapp
+  pythonapp:
+    build: pythonapp
+    image: ${DOCKER_HUB_USER}/pythonapp
+  railsapp:
+    build: railsapp
+    image: ${DOCKER_HUB_USER}/railsapp
+  redis:
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+      update_config:
+        delay: 10s
+        parallelism: 2
+    image: redis:alpine
+    networks:
+    - frontend
+    ports:
+    - '6379'
+  result:
+    depends_on:
+    - db
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      update_config:
+        delay: 10s
+        parallelism: 2
+    image: dockersamples/examplevotingapp_result:before
+    networks:
+    - backend
+    ports:
+    - 5004:80
+  visualizer:
+    deploy:
+      placement:
+        constraints:
+        - node.role == manager
+    image: dockersamples/visualizer:stable
+    ports:
+    - 8282:8080
+    stop_grace_period: 1m30s
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+  vote:
+    depends_on:
+    - redis
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+      update_config:
+        parallelism: 2
+    image: dockersamples/examplevotingapp_vote:before
+    networks:
+    - frontend
+    ports:
+    - 5002:80
+  worker:
+    deploy:
+      labels:
+      - APP=VOTING
+      mode: replicated
+      placement:
+        constraints:
+        - node.role == manager
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 120s
+    image: dockersamples/examplevotingapp_worker
+    networks:
+    - frontend
+    - backend
+
+volumes:
+  db-data: null
+
+networks:
+  backend: null
+  frontend: null
