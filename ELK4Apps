@@ -1,0 +1,41 @@
+version: "3.0"
+
+services:
+  elasticsearch:
+    image: elasticsearch:5.0.0
+    # NOTE: the default vm.max_map_count maynot be enough to 
+    #       run elasticsearch increase it to at least  262144
+    # sudo sysctl vm.max_map_count=262144
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    networks:
+      - logging
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+
+  kibana:
+    image: kibana:5.0.0
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    networks:
+      - logging
+    ports:
+      - "5601:5601"
+
+  logstash:
+    image: logstash:5.0.0 
+    entrypoint: logstash -e 'input { gelf { port => 4560 } } output { elasticsearch { hosts => ["elasticsearch:9200"] } stdout { codec => rubydebug } }'
+    networks:
+      - logging
+    deploy:
+      mode: global
+    ports:
+      - "4560:4560/udp"
+
+networks:
+  logging:
+
+volumes:
+  esdata:
